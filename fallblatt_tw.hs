@@ -88,8 +88,7 @@ setFallblatt text = withSocketsDo $ do
 
 maybeTweetReply :: (Maybe Integer) -> TwitterBotConfig -> (Maybe String) -> (Maybe Integer) -> (Maybe String) -> IO ()
 -- tweet only if we already have a last ID, i.e. not in the first iteration
--- maybeTweetReply (Just _) config (Just screenName) (Just tweetId) (Just text) = do
-maybeTweetReply _ config (Just screenName) (Just tweetId) (Just text) = do
+maybeTweetReply (Just _) config (Just screenName) (Just tweetId) (Just text) = do
 	let replyText = "@" ++ screenName ++ " " ++ text
 	let token = tokenFromConfig config
 	response <- runOAuthM token $ do
