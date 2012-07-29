@@ -52,14 +52,21 @@ mainLoop twitterBotConfig lastId = do
 
 extractLastId :: String -> Maybe Integer
 extractLastId json =
-	okToMaybe decoded >>= listToMaybe >>= extractIdEntry >>= extractFromEntry
+	maybeDecodeJSONList json >>= listToMaybe >>= extractEntry "id" >>= extractNumFromEntry
 	where
-		decoded = decode json :: Result [JSObject JSValue]
-		okToMaybe (Ok j) = Just j
-		okToMaybe _      = Nothing
-		extractIdEntry = (\o -> okToMaybe (valFromObj "id" o :: Result JSValue))
-		extractFromEntry (JSRational False r) = Just $ numerator r
-		extractFromEntry _                    = Nothing
+		extractNumFromEntry (JSRational False r) = Just $ numerator r
+		extractNumFromEntry _                    = Nothing
+
+maybeDecodeJSONList :: String -> Maybe [JSObject JSValue]
+maybeDecodeJSONList = okToMaybe . decode
+
+okToMaybe :: Result a -> Maybe a
+okToMaybe (Ok j) = Just j
+okToMaybe _      = Nothing
+
+-- TODO: is there a way to write this point-free?
+extractEntry :: String -> JSObject JSValue -> Maybe JSValue
+extractEntry key obj = okToMaybe $ valFromObj key obj
 
 parseArgs :: [(String)] -> Maybe (String, String, String, String)
 parseArgs args =
