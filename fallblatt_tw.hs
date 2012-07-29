@@ -98,7 +98,6 @@ maybeTweetReply _ config (Just screenName) (Just tweetId) (Just text) = do
 		                                    reqHeaders = fromList [("Content-Type", "application/x-www-form-urlencoded")],
                                             reqPayload = urlEncode [("status", replyText), ("in_reply_to_status_id", show tweetId)]
                                           } >>= serviceRequest CurlClient
-	putStrLn $ show response
 	return ()
 maybeTweetReply _ _ _ _ _ = do
 	return ()
