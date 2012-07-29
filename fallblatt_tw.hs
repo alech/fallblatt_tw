@@ -29,6 +29,8 @@ data TwitterBotConfig = TwitterBotConfig {
 
 mentionsUrl params = fromJust $ parseURL $ "https://api.twitter.com/1/statuses/mentions.json" ++ params
 
+sleepTime = 15 * 10^6 -- 15 seconds
+
 main = do
 	-- parse command line arguments
 	args <- getArgs
@@ -44,27 +46,20 @@ mainLoop :: TwitterBotConfig -> Maybe Integer -> IO ()
 mainLoop twitterBotConfig lastId = do
 	response <- getMentions twitterBotConfig lastId
 	putStrLn $ show response
-	threadDelay $ 15*10^6 -- sleep 15 seconds
+	threadDelay sleepTime
 	let newLid = extractLastId response
 	mainLoop twitterBotConfig (extractLastId response)
 
--- TODO: make use of the Maybe monad (!!!)
 extractLastId :: String -> Maybe Integer
 extractLastId json =
-	case decoded of
-		(Ok jl) -> extractFromList jl
-		_       -> Nothing
-		where decoded = decode json :: Result [JSObject JSValue]
-		      extractFromList jl =
-			let firstEntry = listToMaybe jl in
-			case firstEntry of
-				(Just e) -> extractFromEntry e
-				_        -> Nothing
-				where extractFromEntry e =
-					case idRes of
-						(Ok (JSRational False r)) -> Just $ (numerator r)
-						_                         -> Nothing
-						where idRes = valFromObj "id" e :: Result JSValue
+	okToMaybe decoded >>= listToMaybe >>= extractIdEntry >>= extractFromEntry
+	where
+		decoded = decode json :: Result [JSObject JSValue]
+		okToMaybe (Ok j) = Just j
+		okToMaybe _      = Nothing
+		extractIdEntry = (\o -> okToMaybe (valFromObj "id" o :: Result JSValue))
+		extractFromEntry (JSRational False r) = Just $ numerator r
+		extractFromEntry _                    = Nothing
 
 parseArgs :: [(String)] -> Maybe (String, String, String, String)
 parseArgs args =
