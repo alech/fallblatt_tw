@@ -60,14 +60,14 @@ mainLoop twitterBotConfig lastId = do
 	putStrLn $ "currentId: " ++ (show currentId)
 	putStrLn $ "mention: " ++ (show mention)
 	putStrLn $ "screenName: " ++ (show screenName)
-	fallblattResponse <- maybeShowOnFallblatt mention screenName
+	fallblattResponse <- maybeShowOnFallblatt lastId mention screenName
 	putStrLn $ "fallblattresponse: " ++ (show fallblattResponse)
 	maybeTweetReply lastId twitterBotConfig screenName currentId fallblattResponse
 	threadDelay sleepTime
 	mainLoop twitterBotConfig (nothingOr currentId lastId)
 
-maybeShowOnFallblatt :: Maybe String -> Maybe String -> IO (Maybe String)
-maybeShowOnFallblatt (Just mention) maybeScreenName = do
+maybeShowOnFallblatt :: Maybe Integer -> Maybe String -> Maybe String -> IO (Maybe String)
+maybeShowOnFallblatt (Just _) (Just mention) maybeScreenName = do
 	if length mention > maxSize then
 		return (Just $ "TMI. Please limit yourself to " ++ (show maxSize) ++ " characters!")
 	else
