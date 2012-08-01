@@ -72,7 +72,7 @@ maybeShowOnFallblatt (Just _) (Just mention) maybeScreenName = do
 		return (Just $ "TMI. Please limit yourself to " ++ (show maxSize) ++ " characters!")
 	else
 		setFallblatt $ maybeCombine mention maybeScreenName
-maybeShowOnFallblatt _ _ = do
+maybeShowOnFallblatt _ _ _ = do
 	return Nothing
 
 -- if there is enough space, combine screen name and mention, i.e.
