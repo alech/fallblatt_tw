@@ -21,6 +21,7 @@ import Text.JSON
 import Data.Ratio
 import Text.Printf
 import Network.Socket
+import Data.Char (toLower)
 
 data TwitterBotConfig = TwitterBotConfig { 
 		consumerKey       :: String,
@@ -55,7 +56,12 @@ mainLoop twitterBotConfig lastId = do
 	let currentId  = extractLastId mentionsResponse
 	let mention    = extractMention mentionsResponse
 	let screenName = extractScreenName mentionsResponse
+	putStrLn $ "lastId: " ++ (show lastId)
+	putStrLn $ "currentId: " ++ (show currentId)
+	putStrLn $ "mention: " ++ (show mention)
+	putStrLn $ "screenName: " ++ (show screenName)
 	fallblattResponse <- maybeShowOnFallblatt mention screenName
+	putStrLn $ "fallblattresponse: " ++ (show fallblattResponse)
 	maybeTweetReply lastId twitterBotConfig screenName currentId fallblattResponse
 	threadDelay sleepTime
 	mainLoop twitterBotConfig (nothingOr currentId lastId)
@@ -97,6 +103,7 @@ maybeTweetReply (Just _) config (Just screenName) (Just tweetId) (Just text) = d
 		                                    reqHeaders = fromList [("Content-Type", "application/x-www-form-urlencoded")],
                                             reqPayload = urlEncode [("status", replyText), ("in_reply_to_status_id", show tweetId)]
                                           } >>= serviceRequest CurlClient
+	putStrLn $ "Tweet reply response: " ++ (show response)
 	return ()
 maybeTweetReply _ _ _ _ _ = do
 	return ()
@@ -113,7 +120,8 @@ extractLastId json =
 
 extractMention :: String -> Maybe String
 extractMention json =
-	maybeDecodeJSONList json >>= listToMaybe >>= (extractEntry "text" :: JSObject JSValue -> Maybe JSString) >>= Just . unwords . drop 1 . words . fromJSString
+	maybeDecodeJSONList json >>= listToMaybe >>= (extractEntry "text" :: JSObject JSValue -> Maybe JSString) >>= Just . unwords . filter notAtFallblatt . words . fromJSString
+	where notAtFallblatt word = "@fallblatt" /= map toLower word -- FIXME point-free?
 
 -- nested JSON
 extractScreenName :: String -> Maybe String
